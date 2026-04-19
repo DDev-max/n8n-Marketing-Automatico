@@ -1,0 +1,1166 @@
+{
+  "name": "Marketing Digital",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "temperature": 1,
+          "safetySettings": {
+            "values": []
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        -608
+      ],
+      "id": "5b49d092-77c9-41b5-b444-328130bf086e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "PL7QnX7crZcQsunP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"Categoria\": \"Maquillaje\",\n\t\"Descripcion\": \"Descubre maquillaje vibrante que resalta tu belleza natural, larga duración, colores intensos y acabado impecable para cualquier ocasión especial o diaria. #maquillaje #GlowUp #MakeupCostaRica\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1968,
+        -592
+      ],
+      "id": "dfa028bb-8e63-4dc7-911f-e4016d0ad7fb",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enviar-img",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -864,
+        -784
+      ],
+      "id": "801f3106-5db0-4b3e-99d5-6eebb51e1cad",
+      "name": "Recibir imagen",
+      "webhookId": "2aeca247-9d32-479a-9253-500b616473cf"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2f127be4-c737-4f1e-9b62-3f7676c3eb71",
+              "leftValue": "={{ $binary.data0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ff2327ad-0148-4d31-a8cb-a7a928e654ca",
+              "leftValue": "={{ $binary.data0.mimeType }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -656,
+        -784
+      ],
+      "id": "488fd320-9ff1-4f79-b801-57e0a01c4d64",
+      "name": "Es imagen?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"mensaje\": \"Archivo invalido, por favor envie una imagen\"\n}",
+        "options": {
+          "responseCode": 415
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -496,
+        -608
+      ],
+      "id": "11cb2a97-3882-4652-b4a3-5d4bdb18692b",
+      "name": "Error 415"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $binary.data0.fileName }}",
+        "limit": 1,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1eBbO0Oj7F61K7artZmtzGdRcbG-wcBFt",
+            "mode": "list",
+            "cachedResultName": "N8N",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1eBbO0Oj7F61K7artZmtzGdRcbG-wcBFt"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -352,
+        -800
+      ],
+      "id": "f1ab4009-1442-4841-9102-a88f7b6fc6c7",
+      "name": "Buscar nombre de archivo",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AkfG1vEzeeYJDYFx",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e1333f3-a022-4ea6-abcf-8b01edbb84cf",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -128,
+        -800
+      ],
+      "id": "3f00954d-6ab8-44d9-8e0c-9db467f30c28",
+      "name": "Ya existe?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"mensaje\": \"Se encontró al menos un archivo con el mismo nombre. Por favor, cambie el nombre y verifique que no se trata de un archivo duplicado.\",\n  \"enlace\": \"https://drive.google.com/file/d/{{$json.id}}/view\"\n}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        80,
+        -928
+      ],
+      "id": "a96340fb-1134-4c9f-a93b-d7bb5de01624",
+      "name": "Error 409"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "={{ $('Recibir imagen').item.binary.data0 }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1eBbO0Oj7F61K7artZmtzGdRcbG-wcBFt",
+          "mode": "list",
+          "cachedResultName": "N8N",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1eBbO0Oj7F61K7artZmtzGdRcbG-wcBFt"
+        },
+        "options": {
+          "simplifyOutput": true
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        336,
+        -784
+      ],
+      "id": "a8c6276f-cffe-46e3-ae97-2219aebac3e9",
+      "name": "Guardar imagen",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AkfG1vEzeeYJDYFx",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        560,
+        -784
+      ],
+      "id": "cccc0e7a-f43d-405d-b64c-c0c488487292",
+      "name": "Convertir img a publica",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AkfG1vEzeeYJDYFx",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select distinct Categoria\nfrom MarketingDigitalPruebas;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        -784
+      ],
+      "id": "5d87c4a3-3e53-496c-816d-cac1333cd957",
+      "name": "Obtener categorias",
+      "credentials": {
+        "microsoftSql": {
+          "id": "lsjQerllXYpbTf5C",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "Categoria"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        976,
+        -784
+      ],
+      "id": "39033ca5-b9b1-48dc-bd2a-fc1b4b1f9c17",
+      "name": "Unir categorias"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "={{ $('Recibir imagen').item.binary.data0 }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1184,
+        -784
+      ],
+      "id": "24c4280a-fe23-4d8a-8e20-a5bc7113e8e4",
+      "name": "Base 64 a texto"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        -784
+      ],
+      "id": "4d9375f1-c86e-4849-b9d4-1ae83bbb5fc3",
+      "name": "Texto a imagen"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Rol\nEres un especialista en markering digital de una tienda de ropa.\n\n# Contexto\nNuestra tienda se llama Tico Trend y esta ubicada en Cartago. Se venden productos de las siguientes categorías: {{ $('Unir categorias').item.json.Categoria }}\n\n# Tarea\n\nA partir de la imagen compartida:\n- Clasificala en una de las categorias de los productos anteriormente mencionados, si no corresponde a ninguna, debes devolver un JSON vacio e ignorar el siguiente paso.\n\n- Genera una descripción atractiva de para redes sociales acerca del producto. Invita a los clientes a visitar la tienda fisica. Evita repetir contenido de publicaciones anteriores. La descripción no debe ser mayor a 40 palabras. Al final de la descripcion, añade 3 hastags que aumenten el alcance.\n\n# Formato\nSiempre debes de responder en formato JSON.\n\n# Alertas\nNo des información acerca del precio del producto.\n",
+        "hasOutputParser": true,
+        "options": {
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1728,
+        -800
+      ],
+      "id": "9ee6bf66-996d-4100-9959-f0279c1b37ba",
+      "name": "Clasificar y generar",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6a93d927-a960-45e5-847f-e2f73986404e",
+              "leftValue": "={{ $json.output.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c5104c0a-93a4-4871-8174-b69b944408c5",
+              "leftValue": "={{ !$json.output.Categoria && !$json.output.Descripcion }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2080,
+        -832
+      ],
+      "id": "29e52084-a75d-4126-bed0-82cbade2e88b",
+      "name": "Categoria identificada?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  mensaje: \"No se pudo clasificar la imagen en ninguna de las categorias. Por favor, intente con otra imagen\",\n  categorias: $('Unir categorias').item.json.Categoria\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2304,
+        -976
+      ],
+      "id": "c6fb9ef0-8c24-4dfa-a7ae-98f5317013f6",
+      "name": "Intente otra img"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select FechaPublicacion, CantidadLikes, NombreRedSocial, Categoria\nfrom MarketingDigitalPruebas\nwhere Categoria = '{{ $json.output.Categoria }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        2624,
+        -896
+      ],
+      "id": "52ecc8c1-268f-4387-9602-c5b9b739fe2a",
+      "name": "Publicaciones historicas",
+      "credentials": {
+        "microsoftSql": {
+          "id": "lsjQerllXYpbTf5C",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2976,
+        -896
+      ],
+      "id": "0b3935a0-1a24-44ea-8727-407e936ace49",
+      "name": "Exportar CSV",
+      "alwaysOutputData": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/procesar-csv",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "api-key-123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3168,
+        -896
+      ],
+      "id": "265bdc71-6919-4bd4-bf81-61d076fc0bf0",
+      "name": "Ejecutar python"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bea46249-201d-443b-bb07-321cbe67f9ab",
+              "name": "img_link",
+              "value": "=https://drive.google.com/file/d/{{ $('Guardar imagen').first().json.id }}/view?usp=sharing",
+              "type": "string"
+            },
+            {
+              "id": "86cf1021-c386-4d04-9021-fb114c5d08a8",
+              "name": "red",
+              "value": "={{ $json.mejor_momento.NombreRedSocial }}",
+              "type": "string"
+            },
+            {
+              "id": "cabb2bf5-762f-44fc-995c-79c60df60e52",
+              "name": "cat",
+              "value": "={{ $('Clasificar y generar').item.json.output.Categoria }}",
+              "type": "string"
+            },
+            {
+              "id": "42cf3a05-71a7-4143-9eaf-ebd8147c809f",
+              "name": "fecha_inicio",
+              "value": "={{ new Date($json.mejor_momento.proxima_fecha.dateTime).toISOString().replace('T', ' ').split('.')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "1e1f8d18-1b9d-4c76-9566-11fc8571f443",
+              "name": "fecha_fin",
+              "value": "={{ new Date(new Date($json.mejor_momento.proxima_fecha.dateTime).getTime() + 60 * 60 * 1000).toISOString().replace('T', ' ').split('.')[0]  }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3376,
+        -896
+      ],
+      "id": "56295a7d-2806-43a2-878e-758cd464708b",
+      "name": "Extraer y ordenar campos"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO MarketingDigitalPruebas \n(FechaPublicacion, NombreRedSocial, Categoria, Descripcion,LinkImagen )\nOUTPUT INSERTED.id\nVALUES \n(CONVERT(DATETIME2, '{{ $json.fecha_inicio }}', 127), '{{ $json.red }}', '{{ $json.cat }}', '{{ $('Clasificar y generar').item.json.output.Descripcion }}' , '{{ $json.img_link }}')\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        3696,
+        -912
+      ],
+      "id": "ebe15d99-bb9d-4118-aa45-c859597cbf99",
+      "name": "Guardar publicacion",
+      "credentials": {
+        "microsoftSql": {
+          "id": "lsjQerllXYpbTf5C",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "91e629355b9a264f4d69233a37b3bc98c3916122ba2a41bd2182adf70b121847@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Marketing"
+        },
+        "start": "={{ $('Extraer y ordenar campos').item.json.fecha_inicio }}",
+        "end": "={{ $('Extraer y ordenar campos').item.json.fecha_fin }}",
+        "useDefaultReminders": false,
+        "additionalFields": {
+          "description": "={{ $json.id }}",
+          "summary": "=Publicacion de {{ $('Extraer y ordenar campos').item.json.cat }} en {{ $('Extraer y ordenar campos').item.json.red }}\n\n\n"
+        },
+        "remindersUi": {
+          "remindersValues": []
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        4048,
+        -912
+      ],
+      "id": "97cbee1d-feb3-4796-95bd-bcdb4e68c349",
+      "name": "Evento de publicacion",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "zOEUcXTzXiJ0mxnR",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"mensaje\": \"Se ha programado la publicacion correctamente\",\n  \"fecha\": \"{{ $json.start.dateTime }}\",\n  \"categoria\": \"{{ $('Clasificar y generar').item.json.output.Categoria }}\",\n  \"desc\" : \"{{ $('Clasificar y generar').item.json.output.Descripcion }}\",\n  \"red\": \"{{ $('Ejecutar python').item.json.mejor_momento.NombreRedSocial }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        4304,
+        -912
+      ],
+      "id": "2bd1602a-87f3-4a79-89c9-714dd09e695d",
+      "name": "Exito"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=1",
+        "collectionName": "ai_chat",
+        "databaseName": "db_n8n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        -576
+      ],
+      "id": "abcfe877-4f29-4555-9509-045479461941",
+      "name": "MongoDB Chat Memory",
+      "executeOnce": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "hjn0GVquiPa1Tel2",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "calendarId": {
+          "__rl": true,
+          "value": "91e629355b9a264f4d69233a37b3bc98c3916122ba2a41bd2182adf70b121847@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Marketing"
+        },
+        "triggerOn": "eventStarted",
+        "options": {
+          "matchTerm": "Publicacion"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTrigger",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        144
+      ],
+      "id": "4b9daeb1-cba7-494f-839b-5da7abb569c9",
+      "name": "En Evento de publicacion",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "zOEUcXTzXiJ0mxnR",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nfrom marketingdigitalpruebas\nwhere id = {{ $json.description }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        144
+      ],
+      "id": "0435aeb9-4f41-475c-bde3-1eb12b8fc707",
+      "name": "Extraer info publicacion",
+      "credentials": {
+        "microsoftSql": {
+          "id": "lsjQerllXYpbTf5C",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.LinkImagen }}",
+          "mode": "url"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1600,
+        144
+      ],
+      "id": "bea4a277-8e00-404b-8006-c8b039e3fcd3",
+      "name": "Descargar img",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AkfG1vEzeeYJDYFx",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://mastodon.social/api/v1/statuses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "={{ $('Extraer info publicacion').item.json.Descripcion }}\n\n{{ $('Extraer info publicacion').item.json.LinkImagen }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1856,
+        144
+      ],
+      "id": "184895a9-6831-407e-a905-4b0b100da653",
+      "name": "Publicar",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "i1ijijIbfg8gfqem",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Ingreso y validación de datos\n\nSe recibe una petición POST a traves de un webhook, se valida que sea una imagen y que no exista un nombre igual en el google drive.\nCódigos de error:\n*  409: Conflicto => Cuando el nombre del archivo ya existe en la carpete 'N8N' de google drive.\n* 415: Archivo no soportado => Cuando se ingresa un archivo diferente a una imagen\n",
+        "height": 528,
+        "width": 1616,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -992
+      ],
+      "id": "0c85dda9-1798-4801-8df6-461347e7c6d3",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Preparación de prompt a la IA\n\n1.  Se consulta a SQL Server las categorias existentes en la tiende de Tico Trend\n2. Se unen las categorias en una sola variable. De esta manera, evitamos enviar multiples mensajes a la IA,\n3. Se vuelve a crear la imagen que el usuario envió mediante el webhook, ya que se pierde entre los nodos",
+        "height": 464,
+        "width": 816,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -960
+      ],
+      "id": "36c8d0ec-2fa7-45d5-aa03-a474b76a9a3f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Crear contenido de la publicacion.\n\n* La IA clasifica la imagen en alguna de las categorias existentes en la BD. Si no pertenece a alguna categoria existente, entonces, devuelve un error y solicita al usuario enviar una imagen diferente.\n\n* La IA genera una descripcion atractiva para redes sociales acerca de la imagen.\n\n* Las respuestas generadas se guardan en MongoDB para asegurarse que el contenido no sea repetitivo",
+        "height": 704,
+        "width": 896,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        -1120
+      ],
+      "id": "5735d73c-74bc-48ea-8807-9631650ab007",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# Determinar mejor momento de publicación\nSe consultan las publicaciones hisoricas a SQL Server y mediante un script de python se calcula cual es la mejor hora y red social para realizar la publicacion.",
+        "height": 640,
+        "width": 992
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        -1136
+      ],
+      "id": "aaf149d2-ce6c-434c-ab1d-0880f0289b2f",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Guardar resultados\nLos resultados son guardados, la publicacion es programada y se responde a el usuario con un mensaje informativo\n* Código: 200 => OK",
+        "height": 432,
+        "width": 864,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3632,
+        -1040
+      ],
+      "id": "8c447c6a-0b8d-45a1-b3c8-6cb093ebbff7",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "# Publicar contenido\n\nAl iniciar el evento, se extrae la informacion de la publicacion de SQL Server y se publica automaticamente en https://mastodon.social/@tico_trend_AI",
+        "height": 368,
+        "width": 1264,
+        "color": "#70360F"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        912,
+        32
+      ],
+      "id": "f98fa63e-5a8d-4f1f-9056-5f7f757e8631",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  item.json.FechaPublicacion = new Date(item.json.FechaPublicacion).toISOString();\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        -896
+      ],
+      "id": "b51ad15c-55a0-44b6-8191-bbca2f34fae6",
+      "name": "Transformar fecha"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Clasificar y generar",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Clasificar y generar",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recibir imagen": {
+      "main": [
+        [
+          {
+            "node": "Es imagen?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es imagen?": {
+      "main": [
+        [
+          {
+            "node": "Buscar nombre de archivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error 415",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar nombre de archivo": {
+      "main": [
+        [
+          {
+            "node": "Ya existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ya existe?": {
+      "main": [
+        [
+          {
+            "node": "Error 409",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Guardar imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar imagen": {
+      "main": [
+        [
+          {
+            "node": "Convertir img a publica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convertir img a publica": {
+      "main": [
+        [
+          {
+            "node": "Obtener categorias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener categorias": {
+      "main": [
+        [
+          {
+            "node": "Unir categorias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unir categorias": {
+      "main": [
+        [
+          {
+            "node": "Base 64 a texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base 64 a texto": {
+      "main": [
+        [
+          {
+            "node": "Texto a imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto a imagen": {
+      "main": [
+        [
+          {
+            "node": "Clasificar y generar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar y generar": {
+      "main": [
+        [
+          {
+            "node": "Categoria identificada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Categoria identificada?": {
+      "main": [
+        [
+          {
+            "node": "Intente otra img",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Publicaciones historicas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publicaciones historicas": {
+      "main": [
+        [
+          {
+            "node": "Transformar fecha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exportar CSV": {
+      "main": [
+        [
+          {
+            "node": "Ejecutar python",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar python": {
+      "main": [
+        [
+          {
+            "node": "Extraer y ordenar campos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer y ordenar campos": {
+      "main": [
+        [
+          {
+            "node": "Guardar publicacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar publicacion": {
+      "main": [
+        [
+          {
+            "node": "Evento de publicacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evento de publicacion": {
+      "main": [
+        [
+          {
+            "node": "Exito",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Clasificar y generar",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "En Evento de publicacion": {
+      "main": [
+        [
+          {
+            "node": "Extraer info publicacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer info publicacion": {
+      "main": [
+        [
+          {
+            "node": "Descargar img",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar img": {
+      "main": [
+        [
+          {
+            "node": "Publicar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intente otra img": {
+      "main": [
+        []
+      ]
+    },
+    "Transformar fecha": {
+      "main": [
+        [
+          {
+            "node": "Exportar CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9b268571-0b87-42ab-9454-4f87cccc4fa4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29288deea6f504c2a3e34a9319cfb1ded2d7c62fea9b5758e62d2424967170e5"
+  },
+  "id": "C3usnTklVs9QsWFf",
+  "tags": []
+}
